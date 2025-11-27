@@ -1,5 +1,4 @@
-// mediaProcessor.ts (Main Composable)
-import { ref, Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import type {
   MediaResizerOptions,
   ProcessingResult,
@@ -52,6 +51,7 @@ export function useMediaProcessor() {
     progress.value = { current, total, stage, filename };
   };
 
+  // mediaProcessor.ts - Update processBatch method
   const processBatch = async <T, R>(
     items: T[],
     processor: (item: T, index: number) => Promise<R>,
@@ -61,7 +61,10 @@ export function useMediaProcessor() {
     const executing: Promise<void>[] = [];
 
     for (let i = 0; i < items.length; i++) {
-      const promise = processor(items[i], i).then(result => {
+      const item = items[i];
+      if (item === undefined) continue; // Skip undefined items
+
+      const promise = processor(item, i).then(result => {
         results[i] = result;
       });
 
@@ -69,13 +72,17 @@ export function useMediaProcessor() {
 
       if (executing.length >= concurrency) {
         await Promise.race(executing);
-        executing.splice(executing.findIndex(p => p === promise), 1);
+        const completedIndex = executing.findIndex(p => p === promise);
+        if (completedIndex !== -1) {
+          executing.splice(completedIndex, 1);
+        }
       }
     }
 
     await Promise.all(executing);
-    return results;
+    return results.filter(r => r !== undefined); // Filter out any undefined results
   };
+
 
   const processImage = async (
     file: File,
@@ -99,16 +106,16 @@ export function useMediaProcessor() {
       const img = await loadImage(file);
 
       // Calculate total tasks
-      const totalTasks = options.sizes.reduce((sum, size) => 
+      const totalTasks = options.sizes.reduce((sum, size) =>
         sum + (size.count || 1), 0
       );
 
       // Process images concurrently
       updateProgress(0, totalTasks, 'processing');
-      
+
       const scaler = new ImageScaler();
       const tasks: Array<() => Promise<ProcessedImage>> = [];
-      
+
       options.sizes.forEach((sizeConfig, idx) => {
         const count = sizeConfig.count || 1;
         for (let i = 0; i < count; i++) {
@@ -162,7 +169,7 @@ export function useMediaProcessor() {
         const icoGenerator = new IcoGenerator();
         const blobs = processedImages.map(img => img.blob);
         icoBlob = await icoGenerator.generateIco(blobs);
-        
+
         processedImages.push({
           blob: icoBlob,
           width: 0,
@@ -175,7 +182,7 @@ export function useMediaProcessor() {
       let zipBlob: Blob | undefined;
       if (options.includeZip) {
         updateProgress(totalTasks, totalTasks, 'zipping');
-        
+
         const zipManager = new ZipManager();
         processedImages.forEach(img => {
           zipManager.addFile(img.filename, img.blob);
@@ -194,7 +201,7 @@ export function useMediaProcessor() {
       }
 
       updateProgress(totalTasks, totalTasks, 'complete');
-      
+
       const duration = performance.now() - startTime;
 
       return {
@@ -206,11 +213,11 @@ export function useMediaProcessor() {
       const mediaError = err instanceof MediaProcessorError
         ? err
         : new MediaProcessorError(
-            'An unexpected error occurred during processing',
-            'UNKNOWN_ERROR',
-            err as Error
-          );
-      
+          'An unexpected error occurred during processing',
+          'UNKNOWN_ERROR',
+          err as Error
+        );
+
       error.value = mediaError;
       throw mediaError;
     } finally {

@@ -50,40 +50,43 @@ export class ImageScaler {
     return this.canvasToBlob(format, quality);
   }
 
-  private applySharpen(): void {
-    const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    const data = imageData.data;
-    const w = imageData.width;
-    const h = imageData.height;
+// imageScaler.ts - Update the applySharpen method
+private applySharpen(): void {
+  const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+  const data = imageData.data;
+  const w = imageData.width;
+  const h = imageData.height;
 
-    // Sharpen kernel
-    const kernel = [
-      0, -1, 0,
-      -1, 5, -1,
-      0, -1, 0
-    ];
+  const kernel = [
+    0, -1, 0,
+    -1, 5, -1,
+    0, -1, 0
+  ];
 
-    const output = new Uint8ClampedArray(data);
+  const output = new Uint8ClampedArray(data);
 
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        for (let c = 0; c < 3; c++) {
-          let sum = 0;
-          for (let ky = -1; ky <= 1; ky++) {
-            for (let kx = -1; kx <= 1; kx++) {
-              const idx = ((y + ky) * w + (x + kx)) * 4 + c;
-              const kernelIdx = (ky + 1) * 3 + (kx + 1);
-              sum += data[idx] * kernel[kernelIdx];
-            }
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      for (let c = 0; c < 3; c++) {
+        let sum = 0;
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const idx = ((y + ky) * w + (x + kx)) * 4 + c;
+            const kernelIdx = (ky + 1) * 3 + (kx + 1);
+            const pixelValue = data[idx] ?? 0;
+            const kernelValue = kernel[kernelIdx] ?? 0;
+            sum += pixelValue * kernelValue;
           }
-          output[(y * w + x) * 4 + c] = Math.min(255, Math.max(0, sum));
         }
+        output[(y * w + x) * 4 + c] = Math.min(255, Math.max(0, sum));
       }
     }
-
-    imageData.data.set(output);
-    this.ctx.putImageData(imageData, 0, 0);
   }
+
+  imageData.data.set(output);
+  this.ctx.putImageData(imageData, 0, 0);
+}
+
 
   private canvasToBlob(format: string, quality: number): Promise<Blob> {
     return new Promise((resolve, reject) => {
