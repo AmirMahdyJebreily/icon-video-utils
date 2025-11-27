@@ -204,7 +204,7 @@
                     class="p-2 rounded-lg bg-gradient-to-br"
                     :class="template.iconClass"
                   >
-                    mponent :is="template.icon" class="w-6 h-6 text-white" />
+                    <component :is="template.icon" class="w-6 h-6 text-white" />
                   </div>
                   <div class="flex-1">
                     <h4
@@ -528,6 +528,9 @@
         </div>
       </div>
     </main>
+    <footer class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+      &copy; 2025 Image Resizer (Beta). <a class="text-sky-500 hover:text-sky-600 transition-colors" href="https://github.com/AmirMahdyJebreily" target="_blank" rel="noopener noreferrer">CodeAgha</a>.
+    </footer>
   </div>
 </template>
 
@@ -557,7 +560,7 @@ const PencilIcon = {
 const locale = ref<"en" | "fa">("en");
 const translations = {
   en: {
-    appName: "Image Resizer Pro",
+    appName: "Image Resizer (Beta)",
     uploadPrompt: "Click to upload or drag and drop",
     supportedFormats: "PNG, JPG, WebP up to 50MB",
     selectTemplate: "Choose a Template",
@@ -594,7 +597,7 @@ const translations = {
     },
   },
   fa: {
-    appName: "تغییر اندازه تصاویر",
+    appName: "تغییر اندازه تصاویر (نسخه بتا)",
     uploadPrompt: "برای آپلود کلیک کنید یا فایل را بکشید",
     supportedFormats: "PNG، JPG، WebP تا ۵۰ مگابایت",
     selectTemplate: "انتخاب الگو",
